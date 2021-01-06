@@ -56,7 +56,7 @@ def scanparticipant():
         cur.execute('SELECT * FROM participantData WHERE CODExID like' + f"'%{targetParticipant}%';")
         data = cur.fetchall()
         if len(data)>0:
-            return render_template('scanresults.html',data=data)
+            return render_template('scan-results.html',data=data)
     return render_template('scanParticipant.html')
 
 
