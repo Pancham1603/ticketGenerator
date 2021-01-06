@@ -55,14 +55,8 @@ def scanparticipant():
         cur = db.cursor()
         cur.execute('SELECT * FROM participantData WHERE CODExID like' + f"'%{targetParticipant}%';")
         data = cur.fetchall()
-        for row in data:
-            participantName = row[0]
-            participantEmail = row[1]
-            participantClass = row[2]
-            participantContact = row[3]
-            participantSchool = row[4]
-
-        return f"Name: {participantName}   |   Email: {participantEmail}   |   Class: {participantClass}   |   Contact: {participantContact}   |   School: {participantSchool} "
+        if len(data)>0:
+            return render_template('scanresults.html',data=data)
     return render_template('scanParticipant.html')
 
 
@@ -72,7 +66,8 @@ def participants():
     cur.execute('SELECT * FROM participantData;')
 
     userdetails = cur.fetchall()
-    return render_template('users.html', userdetails=userdetails)
+    if len(userdetails)>0:
+        return render_template('users.html', userdetails=userdetails)
 
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -83,7 +78,8 @@ def searchbyname():
         cur = db.cursor()
         cur.execute('SELECT * FROM participantData WHERE name like' + f"'%{namefilter}%';")
         searchdata = cur.fetchall()
-        return render_template('search results.html', searchdata=searchdata)
+        if len(searchdata) > 0:
+            return render_template('search results.html', searchdata=searchdata)
     return render_template('searchbyname.html')
 
 @app.errorhandler(404)
