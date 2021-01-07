@@ -1,11 +1,12 @@
 import mysql.connector
-from flask import Flask, render_template, request, url_for, session
+from flask import Flask, render_template, request, url_for, session,redirect
 import random as rd
 import pyqrcode
 from PIL import Image
 from pyzbar.pyzbar import decode
 import smtplib
 import config
+
 
 app = Flask(__name__)
 app.secret_key = '***REMOVED***'
@@ -64,9 +65,6 @@ def participantdatasubmit():
 @app.route('/addparticipant/confirmation', methods=['POST'])
 def verifycommit():
     verifdata = request.form
-    print(session['name'])
-    print(session['TFA'])
-    print(verifdata['verification_code'])
     if int(session['TFA']) == int(verifdata['verification_code']):
         num = rd.randint(100000, 999999)
         qrembed = f"CODEx2021_{num}"
