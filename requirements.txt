@@ -10,11 +10,8 @@ itsdangerous==1.1.0
 jdcal==1.4.1
 Jinja2==2.11.2
 MarkupSafe==1.1.1
-mysql-connector-python==8.0.22
 numpy==1.19.4
 opencv-python==4.4.0.46
-openpyxl==3.0.5
-Pillow==8.0.1
 PyMySQL==0.10.1
 pypng==0.0.20
 PyQRCode==1.2.1

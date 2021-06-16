@@ -6,15 +6,20 @@ from PIL import Image
 from pyzbar.pyzbar import decode
 import smtplib
 import config
-
+from pymongo import MongoClient
 
 app = Flask(__name__)
-app.secret_key = '***REMOVED***'
+app.secret_key = ''
 
-db = mysql.connector.connect(host="localhost",
-                             user="root",
-                             password="***REMOVED***",
-                             database="***REMOVED***")
+# db = mysql.connector.connect(host="localhost",
+#                              user="root",
+#                              password="",
+#                              database="")
+
+client = MongoClient(
+    "")
+db = client.ticketGenerator
+collection1 = db['']
 
 
 def sendmail(receiver, message):
@@ -70,18 +75,29 @@ def verifycommit():
         qrembed = f"CODEx2021_{num}"
 
         code = pyqrcode.create(qrembed)
-        code.png(f"/Users/pancham/PycharmProjects/flasktestapp/QRCodes/CODEx2021_{session['name']}.png", scale=8)
+        code.png(f"QRCodes/CODEx2021_{session['name']}.png", scale=8)
 
-        with open(f"/Users/pancham/PycharmProjects/flasktestapp/QRCodes/CODEx2021_{session['name']}.png", 'rb') as file:
-            binaryData = file.read()
-        cur = db.cursor()
-        cur.execute(
-            "INSERT INTO participantData(name,email,class,contact,school,CODExID,qrcode) VALUES(%s,%s,%s,%s,"
-            "%s,%s,%s)",
-            (session['name'], session['email'], session['grade'], session['contact'], session['school'], qrembed,
-             binaryData))
-        db.commit()
-        cur.close()
+        # with open(f"/Users/pancham/PycharmProjects/flasktestapp/QRCodes/CODEx2021_{session['name']}.png", 'rb') as file:
+        #     binaryData = file.read()
+        # cur = db.cursor()
+        # cur.execute(
+        #     "INSERT INTO participantData(name,email,class,contact,school,CODExID,qrcode) VALUES(%s,%s,%s,%s,"
+        #     "%s,%s,%s)",
+        #     (session['name'], session['email'], session['grade'], session['contact'], session['school'], qrembed,
+        #      binaryData))
+        # db.commit()
+        # cur.close()
+
+        collection1.insert(
+            {
+                '_id': qrembed,
+                'name': session['name'].titlecase(),
+                'email': session['email'],
+                'contact': session['contact'],
+                'school': session['school'].titlecase(),
+            }
+        )
+
         return 'You have successfully registered!'
     else:
         return "Invalid verification code, please register again."
@@ -91,22 +107,37 @@ def scanparticipant():
     if request.method == 'POST':
         scanData = request.form
         filename = scanData['QRCODE']
-        decoder = decode(Image.open(f'/Users/pancham/PycharmProjects/flasktestapp/QRCodes/{filename}'))
+        decoder = decode(Image.open(f'QRCodes/{filename}'))
         targetParticipant = decoder[0].data.decode('ascii ')
-        cur = db.cursor()
-        cur.execute('SELECT * FROM participantData WHERE CODExID like' + f"'%{targetParticipant}%';")
-        data = cur.fetchall()
-        if len(data) > 0:
-            return render_template('scan-results.html', data=data)
+        # cur = db.cursor()
+        # cur.execute('SELECT * FROM participantData WHERE CODExID like' + f"'%{targetParticipant}%';")
+        # data = cur.fetchall()
+        results = collection1.find({
+            '_id':targetParticipant
+        })
+        if results:
+            for result in results:
+                id = result['_id']
+                name = result['name']
+                email = result['email']
+                contact = result['contact']
+                school = result['school']
+            return render_template('scan-results.html', name=name, id=id, email=email, contact=contact, school=school)
     return render_template('scanParticipant.html')
 
 
 @app.route('/participants')
 def participants():
-    cur = db.cursor()
-    cur.execute('SELECT * FROM participantData;')
+    # cur = db.cursor()
+    # cur.execute('SELECT * FROM participantData;')
+    #
+    # userdetails = cur.fetchall()
+    results = collection1.find()
+    userdetails = []
+    if results:
+        for result in results:
+            userdetails.append(result)
 
-    userdetails = cur.fetchall()
     if len(userdetails) > 0:
         return render_template('users.html', userdetails=userdetails)
 
@@ -116,10 +147,17 @@ def searchbyname():
     if request.method == 'POST':
         search = request.form
         namefilter = search['search']
-        cur = db.cursor()
-        cur.execute('SELECT * FROM participantData WHERE name like' + f"'%{namefilter}%';")
-        searchdata = cur.fetchall()
-        if len(searchdata) > 0:
+        # cur = db.cursor()
+        # cur.execute('SELECT * FROM participantData WHERE name like' + f"'%{namefilter}%';")
+        # searchdata = cur.fetchall()
+
+        results = collection1.find({
+            'name':namefilter
+        })
+        if results:
+            searchdata = []
+            for result in results:
+              searchdata.append(result)
             return render_template('search results.html', searchdata=searchdata)
     return render_template('searchbyname.html')
 
